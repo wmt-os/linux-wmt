@@ -25043,6 +25043,7 @@ F:	Documentation/devicetree/bindings/mtd/wm,wm8505-sf.yaml
 F:	drivers/clk/clk-wm8505.c
 F:	drivers/irqchip/irq-vt8500.c
 F:	drivers/mmc/host/wmt-sdmmc.c
+F:	drivers/mtd/devices/wmt_sflash.c
 F:	drivers/pinctrl/vt8500/pinctrl-wmt.c
 F:	include/dt-bindings/clock/wm8505-clock.h
 

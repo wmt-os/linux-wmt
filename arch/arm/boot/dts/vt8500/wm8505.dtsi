@@ -163,6 +163,14 @@
 			status = "disabled";
 		};
 
+		pwm: pwm@d8220000 {
+			compatible = "via,vt8500-pwm";
+			reg = <0xd8220000 0x10000>;
+			#pwm-cells = <2>;
+			clocks = <&pmc WM8505_CLK_PWM>;
+			status = "disabled";
+		};
+
 		uart1: serial@d82b0000 {
 			compatible = "via,vt8500-uart";
 			reg = <0xd82b0000 0x1040>;

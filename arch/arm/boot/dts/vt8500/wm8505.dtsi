@@ -101,6 +101,14 @@
 			interrupts = <36>;
 		};
 
+		ethernet@d8004000 {
+			compatible = "via,velocity-vt6110";
+			reg = <0xd8004000 0x400>;
+			interrupts = <10>;
+			no-eeprom;
+			clocks = <&pmc WM8505_CLK_MAC0>;
+		};
+
 		usb@d8007100 {
 			compatible = "via,vt8500-ehci";
 			reg = <0xd8007100 0x200>;

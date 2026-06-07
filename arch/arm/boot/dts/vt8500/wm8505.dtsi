@@ -86,7 +86,7 @@
 		};
 
 		pinctrl: pinctrl@d8110000 {
-			compatible = "wm,wm8505-pinctrl";
+			compatible = "wm,wm8505-pinctrl", "syscon";
 			reg = <0xd8110000 0x10000>;
 			interrupt-controller;
 			#interrupt-cells = <2>;
@@ -94,6 +94,11 @@
 			#gpio-cells = <2>;
 			gpio-ranges = <&pinctrl 0 0 352>;
 			clocks = <&pmc WM8505_CLK_GPIO>;
+
+			ac97_pins: ac97 {
+				wm,pins = <192 193 194 195 196>;
+				wm,function = <2>;
+			};
 		};
 
 		timer@d8130100 {
@@ -190,6 +195,20 @@
 			reg = <0xd8220000 0x10000>;
 			#pwm-cells = <2>;
 			clocks = <&pmc WM8505_CLK_PWM>;
+			status = "disabled";
+		};
+
+		ac97: ac97@d8290000 {
+			compatible = "wm,wm8505-ac97";
+			reg = <0xd8290000 0x10000>;
+			interrupts = <42>;
+			clocks = <&pmc WM8505_CLK_AC97>;
+			clock-names = "ac97";
+			dmas = <&dmac 18>, <&dmac 19>;
+			dma-names = "tx", "rx";
+			wm,pinmux = <&pinctrl>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&ac97_pins>;
 			status = "disabled";
 		};
 

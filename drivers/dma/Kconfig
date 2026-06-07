@@ -669,6 +669,20 @@ config UNIPHIER_XDMAC
 	  UniPhier platform. This DMA controller can transfer data from
 	  memory to memory, memory to peripheral and peripheral to memory.
 
+config WMT_DMA
+	tristate "WonderMedia WM8505 DMA engine support"
+	depends on ARCH_VT8500 || COMPILE_TEST
+	depends on OF
+	select DMA_ENGINE
+	select DMA_VIRTUAL_CHANNELS
+	help
+	  Enable support for the WonderMedia DMA controller found on
+	  WM8505 SoCs.
+
+	  This DMA controller transfers data from memory to peripheral FIFOs
+	  (such as AC97, SPI, and UART) or vice versa, and between memory
+	  buffers.
+
 config XGENE_DMA
 	tristate "APM X-Gene DMA support"
 	depends on ARCH_XGENE || COMPILE_TEST

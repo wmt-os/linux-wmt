@@ -25036,6 +25036,7 @@ F:	sound/soc/codecs/wm*
 WONDERMEDIA WM8505 SOC SUPPORT
 M:	Logan Russell <me@lrussell.net>
 S:	Maintained
+F:	Documentation/devicetree/bindings/arm/wm,wm8505.yaml
 F:	drivers/irqchip/irq-vt8500.c
 F:	drivers/mmc/host/wmt-sdmmc.c
 F:	drivers/pinctrl/vt8500/pinctrl-wmt.c

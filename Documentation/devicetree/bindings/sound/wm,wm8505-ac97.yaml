@@ -1,0 +1,76 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/sound/wm,wm8505-ac97.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: WonderMedia WM8505 AC97 Audio Controller
+
+maintainers:
+  - Logan Russell <me@lrussell.net>
+
+properties:
+  compatible:
+    const: wm,wm8505-ac97
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  clocks:
+    maxItems: 1
+
+  clock-names:
+    items:
+      - const: ac97
+
+  dmas:
+    items:
+      - description: TX (playback) DMA channel
+      - description: RX (capture) DMA channel
+
+  dma-names:
+    items:
+      - const: tx
+      - const: rx
+
+  speaker-gpios:
+    maxItems: 1
+    description: GPIO for controlling the headphone/speaker amplifier
+
+  wm,pinmux:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description:
+      Phandle to the pinmux block whose global pin-sharing select routes
+      the shared audio pins to AC97 or I2S
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - clocks
+  - clock-names
+  - dmas
+  - dma-names
+  - wm,pinmux
+
+additionalProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/clock/wm8505-clock.h>
+    #include <dt-bindings/gpio/gpio.h>
+
+    ac97@d8290000 {
+        compatible = "wm,wm8505-ac97";
+        reg = <0xd8290000 0x10000>;
+        interrupts = <42>;
+        clocks = <&pmc WM8505_CLK_AC97>;
+        clock-names = "ac97";
+        dmas = <&dmac 18>, <&dmac 19>;
+        dma-names = "tx", "rx";
+        speaker-gpios = <&pinctrl 3 GPIO_ACTIVE_LOW>;
+        wm,pinmux = <&pinctrl>;
+    };

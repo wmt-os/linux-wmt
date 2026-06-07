@@ -102,6 +102,17 @@
 			interrupts = <36>;
 		};
 
+		dmac: dma-controller@d8001800 {
+			compatible = "wm,wm8505-dma";
+			reg = <0xd8001800 0x400>;
+			interrupts-extended = <&intc0 17>, <&intc0 27>, <&intc0 34>, <&intc0 40>,
+					      <&intc0 41>, <&intc0 45>, <&intc0 46>, <&intc0 51>,
+					      <&intc1 28>, <&intc1 29>, <&intc1 30>, <&intc1 31>,
+					      <&intc1 32>, <&intc1 33>, <&intc1 34>, <&intc1 35>;
+			clocks = <&pmc WM8505_CLK_DMA>;
+			#dma-cells = <1>;
+		};
+
 		ethernet@d8004000 {
 			compatible = "via,velocity-vt6110";
 			reg = <0xd8004000 0x400>;

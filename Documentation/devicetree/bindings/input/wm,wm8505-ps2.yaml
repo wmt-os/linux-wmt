@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/input/wm,wm8505-ps2.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: WonderMedia WM8505 PS/2 Controller
+
+maintainers:
+  - Logan Russell <me@lrussell.net>
+
+properties:
+  compatible:
+    const: wm,wm8505-ps2
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    items:
+      - description: Keyboard (KBD) interrupt
+      - description: Auxiliary (AUX/Touchpad) interrupt
+
+  interrupt-names:
+    items:
+      - const: kbd
+      - const: aux
+
+  clocks:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - interrupt-names
+  - clocks
+
+additionalProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/clock/wm8505-clock.h>
+
+    ps2@d8008800 {
+        compatible = "wm,wm8505-ps2";
+        reg = <0xd8008800 0x100>;
+        interrupts = <23>, <4>;
+        interrupt-names = "kbd", "aux";
+        clocks = <&pmc WM8505_CLK_PS2KBDC>;
+    };

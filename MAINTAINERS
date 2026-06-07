@@ -25039,6 +25039,7 @@ S:	Maintained
 F:	arch/arm/boot/dts/vt8500/wm8505*
 F:	Documentation/devicetree/bindings/arm/wm,wm8505.yaml
 F:	Documentation/devicetree/bindings/clock/wm,wm8505-pmc.yaml
+F:	Documentation/devicetree/bindings/input/wm,wm8505-ps2.yaml
 F:	Documentation/devicetree/bindings/mtd/wm,wm8505-sf.yaml
 F:	drivers/clk/clk-wm8505.c
 F:	drivers/irqchip/irq-vt8500.c

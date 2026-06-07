@@ -161,11 +161,34 @@
 		graphics: graphics@d8050400 {
 			compatible = "wm,prizm-ge-rops";
 			reg = <0xd8050400 0x100>;
+			interrupt-parent = <&intc1>;
+			interrupts = <21>;
 		};
 
-		fb: fb@d8050800 {
-			compatible = "wm,wm8505-fb";
-			reg = <0xd8050800 0x200>;
+		display: display@d8050800 {
+			compatible = "wm,wm8505-drm";
+			reg = <0xd8050800 0x200>, <0xd8001c00 0x100>;
+			reg-names = "govrh", "vdma";
+			interrupts-extended = <&intc1 16>, <&intc0 9>;
+			interrupt-names = "vpp", "vdma";
+			clocks = <&pmc WM8505_CLK_DVO>,
+				 <&pmc WM8505_CLK_GOVRHD>,
+				 <&pmc WM8505_CLK_VPP>,
+				 <&pmc WM8505_CLK_PDMA>,
+				 <&pmc WM8505_CLK_GE>;
+			clock-names = "dvo", "govrh", "vpp", "vdma", "ge";
+			wm,ge = <&graphics>;
+			wm,vpp = <&vpp>;
+			status = "disabled";
+
+			port {
+				display_out: endpoint { };
+			};
+		};
+
+		vpp: syscon@d8050f00 {
+			compatible = "wm,wm8505-vpp", "syscon";
+			reg = <0xd8050f00 0x100>;
 		};
 
 		rtc@d8100000 {

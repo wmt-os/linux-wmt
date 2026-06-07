@@ -25046,12 +25046,14 @@ F:	Documentation/devicetree/bindings/mtd/wm,wm8505-sf.yaml
 F:	Documentation/devicetree/bindings/sound/wm,wm8505-ac97.yaml
 F:	drivers/clk/clk-wm8505.c
 F:	drivers/dma/wmt-dma.c
+F:	drivers/gpu/drm/wmt/
 F:	drivers/input/serio/wm8505-ps2.c
 F:	drivers/irqchip/irq-vt8500.c
 F:	drivers/mmc/host/wmt-sdmmc.c
 F:	drivers/mtd/devices/wmt_sflash.c
 F:	drivers/pinctrl/vt8500/pinctrl-wmt.c
 F:	include/dt-bindings/clock/wm8505-clock.h
+F:	include/uapi/drm/wmt_drm.h
 F:	sound/soc/wmt/
 
 WORKQUEUE

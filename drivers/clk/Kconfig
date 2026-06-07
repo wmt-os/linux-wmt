@@ -474,6 +474,26 @@ config COMMON_CLK_SP7021
 	  Not all features of the PLL are currently supported
 	  by the driver.
 
+config COMMON_CLK_VT8500
+	bool "Clock driver for VIA/WonderMedia SoCs"
+	depends on ARCH_VT8500 || COMPILE_TEST
+	default ARCH_VT8500
+	help
+	  This driver provides foundational clock controller support
+	  for the VIA VT8500 and WonderMedia WM8650, WM8750, and
+	  WM8850 platforms. It manages the system clocks required
+	  by device peripherals across these SoCs.
+
+config COMMON_CLK_WM8505
+	bool "Clock driver for WonderMedia WM8505 SoC"
+	depends on ARCH_VT8500 || COMPILE_TEST
+	default ARCH_WM8505
+	help
+	  This driver provides modern clock controller support
+	  specifically for the WonderMedia WM8505 platform. It
+	  implements the central clock provider required by
+	  device peripherals on this specific SoC.
+
 source "drivers/clk/actions/Kconfig"
 source "drivers/clk/analogbits/Kconfig"
 source "drivers/clk/baikal-t1/Kconfig"

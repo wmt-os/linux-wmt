@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/dma/wm,wm8505-dma.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: WonderMedia WM8505 DMA Controller
+
+maintainers:
+  - Logan Russell <me@lrussell.net>
+
+properties:
+  compatible:
+    const: wm,wm8505-dma
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    minItems: 16
+    maxItems: 16
+    description: Individual interrupt lines for each of the 16 DMA channels
+
+  clocks:
+    maxItems: 1
+
+  "#dma-cells":
+    const: 1
+    description: Contains the request ID/channel number for the connecting peripheral
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - clocks
+  - "#dma-cells"
+
+additionalProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/clock/wm8505-clock.h>
+
+    dma-controller@d8001800 {
+        compatible = "wm,wm8505-dma";
+        reg = <0xd8001800 0x400>;
+        interrupts = <17>, <27>, <34>, <40>,
+                     <41>, <45>, <46>, <51>,
+                     <28>, <29>, <30>, <31>,
+                     <32>, <33>, <34>, <35>;
+        clocks = <&pmc WM8505_CLK_DMA>;
+        #dma-cells = <1>;
+    };

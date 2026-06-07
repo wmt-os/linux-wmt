@@ -391,6 +391,14 @@ struct drm_driver {
 	 */
 	void (*show_fdinfo)(struct drm_printer *p, struct drm_file *f);
 
+	/**
+	 * @fbdev_probe_hook:
+	 *
+	 * Custom hook to allow drivers to modify the fb_info struct
+	 * before the framebuffer is registered.
+	 */
+	void (*fbdev_probe_hook)(struct drm_fb_helper *helper);
+
 	/** @major: driver major number */
 	int major;
 	/** @minor: driver minor number */

@@ -321,6 +321,9 @@ int drm_fbdev_dma_driver_fbdev_probe(struct drm_fb_helper *fb_helper,
 	if (ret)
 		goto err_drm_client_buffer_vunmap;
 
+	if (dev->driver->fbdev_probe_hook)
+		dev->driver->fbdev_probe_hook(fb_helper);
+
 	return 0;
 
 err_drm_client_buffer_vunmap:

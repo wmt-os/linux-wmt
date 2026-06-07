@@ -25033,6 +25033,11 @@ F:	sound/soc/codecs/arizona*
 F:	sound/soc/codecs/cs47l24*
 F:	sound/soc/codecs/wm*
 
+WONDERMEDIA WM8505 SOC SUPPORT
+M:	Logan Russell <me@lrussell.net>
+S:	Maintained
+F:	drivers/irqchip/irq-vt8500.c
+
 WORKQUEUE
 M:	Tejun Heo <tj@kernel.org>
 R:	Lai Jiangshan <jiangshanlai@gmail.com>

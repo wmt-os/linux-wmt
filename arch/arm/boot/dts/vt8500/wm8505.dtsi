@@ -124,6 +124,16 @@
 			clocks = <&pmc WM8505_CLK_UHC>;
 		};
 
+		ps2@d8008800 {
+			compatible = "wm,wm8505-ps2";
+			reg = <0xd8008800 0x100>;
+			interrupts = <23>, <4>;
+			interrupt-names = "kbd", "aux";
+			clocks = <&pmc WM8505_CLK_PS2KBDC>;
+			assigned-clocks = <&pmc WM8505_CLK_PS2KBDC>;
+			assigned-clock-rates = <4637097>;
+		};
+
 		mmc@d800a000 {
 			compatible = "wm,wm8505-sdhc";
 			reg = <0xd800a000 0x400>;

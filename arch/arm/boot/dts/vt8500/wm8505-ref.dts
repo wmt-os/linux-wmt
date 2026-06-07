@@ -14,6 +14,49 @@
 / {
 	model = "WonderMedia WM8505 Netbook";
 	compatible = "wm,wm8505-ref", "wm,wm8505";
+
+	backlight: backlight {
+		compatible = "pwm-backlight";
+		brightness-levels = <0>, <10>, <12>, <15>, <19>, <24>, <29>,
+				    <37>, <45>, <56>, <70>, <87>, <108>,
+				    <133>, <166>, <205>, <255>;
+		default-brightness-level = <14>;
+		pwms = <&pwm 0 40000>;
+	};
+
+	panel {
+		compatible = "panel-dpi";
+		power-supply = <&vcc33>;
+		backlight = <&backlight>;
+		width-mm = <154>;
+		height-mm = <86>;
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&display_out>;
+			};
+		};
+
+		panel-timing {
+			clock-frequency = <30000000>;
+			hactive = <800>;
+			vactive = <480>;
+			hsync-len = <48>;
+			hback-porch = <40>;
+			hfront-porch = <40>;
+			vsync-len = <3>;
+			vback-porch = <29>;
+			vfront-porch = <13>;
+		};
+	};
+
+	vcc33: regulator-vcc33 {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc33";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+	};
 };
 
 &ac97 {
@@ -21,20 +64,12 @@
 	status = "okay";
 };
 
-&fb {
-	bits-per-pixel = <32>;
-	display-timings {
-		native-mode = <&timing0>;
-		timing0: timing-800x480 {
-			clock-frequency = <0>; /* unused but required */
-			hactive = <800>;
-			vactive = <480>;
-			hfront-porch = <40>;
-			hback-porch = <88>;
-			hsync-len = <0>;
-			vback-porch = <32>;
-			vfront-porch = <11>;
-			vsync-len = <1>;
+&display {
+	status = "okay";
+
+	port {
+		display_out: endpoint {
+			remote-endpoint = <&panel_in>;
 		};
 	};
 };
@@ -46,6 +81,10 @@
 		output-high;
 		line-name = "wifi-power";
 	};
+};
+
+&pwm {
+	status = "okay";
 };
 
 &uart0 {

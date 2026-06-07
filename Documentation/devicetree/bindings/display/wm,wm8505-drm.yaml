@@ -1,0 +1,96 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/display/wm,wm8505-drm.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: WonderMedia WM8505 DRM/KMS Display Controller
+
+maintainers:
+  - Logan Russell <me@lrussell.net>
+
+properties:
+  compatible:
+    const: wm,wm8505-drm
+
+  reg:
+    items:
+      - description: Graphics Output (GOVRH) registers
+      - description: Video DMA (VDMA) registers
+
+  reg-names:
+    items:
+      - const: govrh
+      - const: vdma
+
+  interrupts:
+    items:
+      - description: VPP vertical blanking interrupt
+      - description: VDMA transfer completion interrupt
+
+  interrupt-names:
+    items:
+      - const: vpp
+      - const: vdma
+
+  clocks:
+    maxItems: 5
+
+  clock-names:
+    items:
+      - const: dvo
+      - const: govrh
+      - const: vpp
+      - const: vdma
+      - const: ge
+
+  wm,ge:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: Phandle to the 2D Graphics Engine (GE) node
+
+  wm,vpp:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: Phandle to the Video Post Processor (VPP) syscon node
+
+  port:
+    $ref: /schemas/graph.yaml#/properties/port
+    description: Output port endpoint for the display panel
+
+required:
+  - compatible
+  - reg
+  - reg-names
+  - interrupts
+  - interrupt-names
+  - clocks
+  - clock-names
+  - wm,ge
+  - wm,vpp
+
+additionalProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/clock/wm8505-clock.h>
+
+    display@d8050800 {
+        compatible = "wm,wm8505-drm";
+        reg = <0xd8050800 0x200>, <0xd8001c00 0x100>;
+        reg-names = "govrh", "vdma";
+        interrupts-extended = <&intc1 16>, <&intc0 9>;
+        interrupt-names = "vpp", "vdma";
+        clocks = <&pmc WM8505_CLK_DVO>,
+                 <&pmc WM8505_CLK_GOVRHD>,
+                 <&pmc WM8505_CLK_VPP>,
+                 <&pmc WM8505_CLK_PDMA>,
+                 <&pmc WM8505_CLK_GE>;
+        clock-names = "dvo", "govrh", "vpp", "vdma", "ge";
+        wm,ge = <&graphics>;
+        wm,vpp = <&vpp>;
+
+        port {
+            display_out: endpoint {
+                remote-endpoint = <&panel_in>;
+            };
+        };
+    };

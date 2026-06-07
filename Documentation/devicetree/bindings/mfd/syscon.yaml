@@ -117,6 +117,7 @@ select:
           - ti,j784s4-acspcie-proxy-ctrl
           - ti,j784s4-pcie-ctrl
           - ti,keystone-pllctrl
+          - wm,wm8505-vpp
   required:
     - compatible
 
@@ -213,6 +214,7 @@ properties:
           - ti,am654-dss-oldi-io-ctrl
           - ti,j784s4-pcie-ctrl
           - ti,keystone-pllctrl
+          - wm,wm8505-vpp
       - const: syscon
 
   reg:

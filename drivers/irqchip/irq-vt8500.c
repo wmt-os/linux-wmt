@@ -4,6 +4,7 @@
  *
  *  Copyright (C) 2012 Tony Prisk <linux@prisktech.co.nz>
  *  Copyright (C) 2010 Alexey Charkov <alchark@gmail.com>
+ *  Copyright (C) 2026 Logan Russell <me@lrussell.net>
  */
 
 /*
@@ -15,6 +16,7 @@
 #include <linux/io.h>
 #include <linux/irq.h>
 #include <linux/irqchip.h>
+#include <linux/irqchip/chained_irq.h>
 #include <linux/irqdomain.h>
 #include <linux/interrupt.h>
 #include <linux/bitops.h>
@@ -187,6 +189,15 @@ static void __exception_irq_entry vt8500_handle_irq(struct pt_regs *regs)
 	}
 }
 
+static void vt8500_cascade_handler(struct irq_desc *desc)
+{
+	struct irq_chip *chip = irq_desc_get_chip(desc);
+
+	/* Top-level polling loop handles dispatching, only enter/exit required */
+	chained_irq_enter(chip, desc);
+	chained_irq_exit(chip, desc);
+}
+
 static int __init vt8500_irq_init(struct device_node *node,
 				  struct device_node *parent)
 {
@@ -232,10 +243,11 @@ static int __init vt8500_irq_init(struct device_node *node,
 
 		for (i = 0; i < 8; i++) {
 			irq = irq_of_parse_and_map(np, i);
-			enable_irq(irq);
+			if (irq)
+				irq_set_chained_handler(irq, vt8500_cascade_handler);
 		}
 
-		pr_info("vt8500-irq: Enabled slave->parent interrupts\n");
+		pr_info("vt8500-irq: Enabled slave->parent chained interrupts\n");
 	}
 out:
 	return 0;

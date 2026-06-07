@@ -16,6 +16,11 @@
 	compatible = "wm,wm8505-ref", "wm,wm8505";
 };
 
+&ac97 {
+	speaker-gpios = <&pinctrl 3 GPIO_ACTIVE_LOW>;
+	status = "okay";
+};
+
 &fb {
 	bits-per-pixel = <32>;
 	display-timings {

@@ -25037,9 +25037,11 @@ WONDERMEDIA WM8505 SOC SUPPORT
 M:	Logan Russell <me@lrussell.net>
 S:	Maintained
 F:	Documentation/devicetree/bindings/arm/wm,wm8505.yaml
+F:	Documentation/devicetree/bindings/clock/wm,wm8505-pmc.yaml
 F:	drivers/irqchip/irq-vt8500.c
 F:	drivers/mmc/host/wmt-sdmmc.c
 F:	drivers/pinctrl/vt8500/pinctrl-wmt.c
+F:	include/dt-bindings/clock/wm8505-clock.h
 
 WORKQUEUE
 M:	Tejun Heo <tj@kernel.org>

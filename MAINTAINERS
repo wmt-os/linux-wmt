@@ -25036,6 +25036,7 @@ F:	sound/soc/codecs/wm*
 WONDERMEDIA WM8505 SOC SUPPORT
 M:	Logan Russell <me@lrussell.net>
 S:	Maintained
+F:	arch/arm/boot/dts/vt8500/wm8505*
 F:	Documentation/devicetree/bindings/arm/wm,wm8505.yaml
 F:	Documentation/devicetree/bindings/clock/wm,wm8505-pmc.yaml
 F:	drivers/clk/clk-wm8505.c

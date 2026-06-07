@@ -25051,6 +25051,7 @@ F:	drivers/mmc/host/wmt-sdmmc.c
 F:	drivers/mtd/devices/wmt_sflash.c
 F:	drivers/pinctrl/vt8500/pinctrl-wmt.c
 F:	include/dt-bindings/clock/wm8505-clock.h
+F:	sound/soc/wmt/
 
 WORKQUEUE
 M:	Tejun Heo <tj@kernel.org>

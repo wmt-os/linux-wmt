@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: GPL-2.0-only
+menuconfig SND_SOC_WMT
+	tristate "ASoC support for WonderMedia"
+	depends on ARCH_VT8500 || COMPILE_TEST
+	help
+	  Say Y or M if you want to add support for SoC audio on
+	  WonderMedia platforms. This allows selecting drivers
+	  for the built-in audio controllers.
+	  If unsure, say N.
+
+if SND_SOC_WMT
+
+config SND_SOC_WM8505_AC97
+	tristate "WM8505 AC97 Audio support"
+	select AC97_BUS
+	select MFD_SYSCON
+	select SND_AC97_CODEC
+	select SND_SOC_AC97_BUS
+	select SND_SOC_AC97_CODEC
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	help
+	  Say Y or M if you want to enable support for the AC97
+	  audio controller found on the WonderMedia WM8505 SoC.
+	  This will provide audio playback and capture support
+	  for this platform. If unsure, say N.
+
+endif # SND_SOC_WMT

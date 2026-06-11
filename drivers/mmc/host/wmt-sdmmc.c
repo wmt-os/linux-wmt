@@ -22,6 +22,7 @@
 #include <linux/of.h>
 #include <linux/of_address.h>
 #include <linux/of_irq.h>
+#include <linux/align.h>
 #include <linux/math.h>
 #include <linux/minmax.h>
 
@@ -168,6 +169,9 @@
 #define DMA_CCR_RUN			0x00000080
 #define DMA_CCR_IF_TO_PERIPHERAL	0x00000000
 #define DMA_CCR_PERIPHERAL_TO_IF	0x00400000
+#define DMA_CCR_BURST_SINGLE		0x00000000
+#define DMA_CCR_BURST_INC4		0x00000010
+#define DMA_CCR_BURST_INC8		0x00000020
 
 /* SDDMA_CCR event status */
 #define DMA_CCR_EVT_MASK		0x0000000F
@@ -548,17 +552,17 @@ static void wmt_dma_config(struct mmc_host *mmc, u32 descaddr, u8 dir)
 	/* Write DMA Descriptor Pointer Register */
 	writel(descaddr, priv->sdmmc_base + SDDMA_DESPR);
 
-	writel(0x00, priv->sdmmc_base + SDDMA_CCR);
+	if (IS_ALIGNED(priv->req->data->blksz, 32))
+		reg_tmp = DMA_CCR_BURST_INC8;
+	else if (IS_ALIGNED(priv->req->data->blksz, 16))
+		reg_tmp = DMA_CCR_BURST_INC4;
+	else
+		reg_tmp = DMA_CCR_BURST_SINGLE;
 
-	if (dir == PDMA_WRITE) {
-		reg_tmp = readl(priv->sdmmc_base + SDDMA_CCR);
-		writel(reg_tmp & DMA_CCR_IF_TO_PERIPHERAL, priv->sdmmc_base +
-		       SDDMA_CCR);
-	} else {
-		reg_tmp = readl(priv->sdmmc_base + SDDMA_CCR);
-		writel(reg_tmp | DMA_CCR_PERIPHERAL_TO_IF, priv->sdmmc_base +
-		       SDDMA_CCR);
-	}
+	if (dir == PDMA_READ)
+		reg_tmp |= DMA_CCR_PERIPHERAL_TO_IF;
+
+	writel(reg_tmp, priv->sdmmc_base + SDDMA_CCR);
 }
 
 static void wmt_dma_start(struct wmt_mci_priv *priv)

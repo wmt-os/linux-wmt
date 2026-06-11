@@ -4,6 +4,7 @@
  *
  *  Copyright (C) 2010 Tony Prisk
  *  Copyright (C) 2008 WonderMedia Technologies, Inc.
+ *  Copyright (C) 2026 Logan Russell <me@lrussell.net>
  */
 
 #include <linux/init.h>
@@ -890,7 +891,7 @@ static void wmt_mci_remove(struct platform_device *pdev)
 
 	/* reset SD controller */
 	reg_tmp = readb(priv->sdmmc_base + SDMMC_BUSMODE);
-	writel(reg_tmp | BM_SOFT_RESET, priv->sdmmc_base + SDMMC_BUSMODE);
+	writeb(reg_tmp | BM_SOFT_RESET, priv->sdmmc_base + SDMMC_BUSMODE);
 	reg_tmp = readw(priv->sdmmc_base + SDMMC_BLKLEN);
 	writew(reg_tmp & ~(0xA000), priv->sdmmc_base + SDMMC_BLKLEN);
 	writeb(0xFF, priv->sdmmc_base + SDMMC_STS0);

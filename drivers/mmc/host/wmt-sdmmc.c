@@ -204,9 +204,6 @@ struct wmt_mci_priv {
 	struct mmc_host *mmc;
 	void __iomem *sdmmc_base;
 
-	int irq_regular;
-	int irq_dma;
-
 	void *dma_desc_buffer;
 	dma_addr_t dma_desc_device_addr;
 
@@ -787,20 +784,18 @@ static int wmt_mci_probe(struct platform_device *pdev)
 		return -EFAULT;
 	}
 
-	regular_irq = irq_of_parse_and_map(np, 0);
-	dma_irq = irq_of_parse_and_map(np, 1);
+	regular_irq = platform_get_irq(pdev, 0);
+	if (regular_irq < 0)
+		return regular_irq;
 
-	if (!regular_irq || !dma_irq) {
-		dev_err(&pdev->dev, "Getting IRQs failed!\n");
-		ret = -ENXIO;
-		goto fail1;
-	}
+	dma_irq = platform_get_irq(pdev, 1);
+	if (dma_irq < 0)
+		return dma_irq;
 
-	mmc = mmc_alloc_host(sizeof(struct wmt_mci_priv), &pdev->dev);
+	mmc = devm_mmc_alloc_host(&pdev->dev, sizeof(struct wmt_mci_priv));
 	if (!mmc) {
 		dev_err(&pdev->dev, "Failed to allocate mmc_host\n");
-		ret = -ENOMEM;
-		goto fail1;
+		return -ENOMEM;
 	}
 
 	mmc->ops = &wmt_mci_ops;
@@ -826,79 +821,50 @@ static int wmt_mci_probe(struct platform_device *pdev)
 	priv->power_inverted = of_property_read_bool(np, "sdon-inverted");
 	priv->cd_inverted = of_property_read_bool(np, "cd-inverted");
 
-	priv->sdmmc_base = of_iomap(np, 0);
-	if (!priv->sdmmc_base) {
-		dev_err(&pdev->dev, "Failed to map IO space\n");
-		ret = -ENOMEM;
-		goto fail2;
+	priv->sdmmc_base = devm_platform_ioremap_resource(pdev, 0);
+	if (IS_ERR(priv->sdmmc_base))
+		return PTR_ERR(priv->sdmmc_base);
+
+	priv->clk_sdmmc = devm_clk_get_enabled(&pdev->dev, NULL);
+	if (IS_ERR(priv->clk_sdmmc)) {
+		dev_err(&pdev->dev, "Error getting clock\n");
+		return PTR_ERR(priv->clk_sdmmc);
 	}
 
-	priv->irq_regular = regular_irq;
-	priv->irq_dma = dma_irq;
-
-	ret = request_irq(regular_irq, wmt_mci_regular_isr, 0, "sdmmc", priv);
+	ret = devm_request_irq(&pdev->dev, regular_irq, wmt_mci_regular_isr, 0, "sdmmc", priv);
 	if (ret) {
 		dev_err(&pdev->dev, "Register regular IRQ fail\n");
-		goto fail3;
+		return ret;
 	}
 
-	ret = request_irq(dma_irq, wmt_mci_dma_isr, 0, "sdmmc", priv);
+	ret = devm_request_irq(&pdev->dev, dma_irq, wmt_mci_dma_isr, 0, "sdmmc", priv);
 	if (ret) {
 		dev_err(&pdev->dev, "Register DMA IRQ fail\n");
-		goto fail4;
+		return ret;
 	}
 
 	/* alloc some DMA buffers for descriptors/transfers */
-	priv->dma_desc_buffer = dma_alloc_coherent(&pdev->dev,
-						   mmc->max_blk_count * 16,
-						   &priv->dma_desc_device_addr,
-						   GFP_KERNEL);
+	priv->dma_desc_buffer = dmam_alloc_coherent(&pdev->dev,
+						    mmc->max_blk_count * 16,
+						    &priv->dma_desc_device_addr,
+						    GFP_KERNEL);
 	if (!priv->dma_desc_buffer) {
 		dev_err(&pdev->dev, "DMA alloc fail\n");
-		ret = -EPERM;
-		goto fail5;
+		return -EPERM;
 	}
 
 	platform_set_drvdata(pdev, mmc);
-
-	priv->clk_sdmmc = of_clk_get(np, 0);
-	if (IS_ERR(priv->clk_sdmmc)) {
-		dev_err(&pdev->dev, "Error getting clock\n");
-		ret = PTR_ERR(priv->clk_sdmmc);
-		goto fail5_and_a_half;
-	}
-
-	ret = clk_prepare_enable(priv->clk_sdmmc);
-	if (ret)
-		goto fail6;
 
 	/* configure the controller to a known 'ready' state */
 	wmt_reset_hardware(mmc);
 
 	ret = mmc_add_host(mmc);
 	if (ret)
-		goto fail7;
+		return ret;
 
 	dev_info(&pdev->dev, "WMT SDHC Controller initialized\n");
 
 	return 0;
-fail7:
-	clk_disable_unprepare(priv->clk_sdmmc);
-fail6:
-	clk_put(priv->clk_sdmmc);
-fail5_and_a_half:
-	dma_free_coherent(&pdev->dev, mmc->max_blk_count * 16,
-			  priv->dma_desc_buffer, priv->dma_desc_device_addr);
-fail5:
-	free_irq(dma_irq, priv);
-fail4:
-	free_irq(regular_irq, priv);
-fail3:
-	iounmap(priv->sdmmc_base);
-fail2:
-	mmc_free_host(mmc);
-fail1:
-	return ret;
 }
 
 static void wmt_mci_remove(struct platform_device *pdev)
@@ -918,21 +884,7 @@ static void wmt_mci_remove(struct platform_device *pdev)
 	writeb(0xFF, priv->sdmmc_base + SDMMC_STS0);
 	writeb(0xFF, priv->sdmmc_base + SDMMC_STS1);
 
-	/* release the dma buffers */
-	dma_free_coherent(&pdev->dev, priv->mmc->max_blk_count * 16,
-			  priv->dma_desc_buffer, priv->dma_desc_device_addr);
-
 	mmc_remove_host(mmc);
-
-	free_irq(priv->irq_regular, priv);
-	free_irq(priv->irq_dma, priv);
-
-	iounmap(priv->sdmmc_base);
-
-	clk_disable_unprepare(priv->clk_sdmmc);
-	clk_put(priv->clk_sdmmc);
-
-	mmc_free_host(mmc);
 
 	dev_info(&pdev->dev, "WMT MCI device removed\n");
 }

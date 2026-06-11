@@ -343,6 +343,7 @@ static irqreturn_t wmt_mci_dma_isr(int irq_num, void *data)
 	if (status != DMA_CCR_EVT_SUCCESS) {
 		dev_err(priv->dev, "DMA Error: Status = %d\n", status);
 		priv->req->data->error = -ETIMEDOUT;
+		wmt_mci_disable_dma(priv);
 		complete(priv->comp_dma);
 		return IRQ_HANDLED;
 	}

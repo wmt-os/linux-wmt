@@ -631,6 +631,13 @@ static void wmt_mci_request(struct mmc_host *mmc, struct mmc_request *req)
 				cmdtype = 4;
 		}
 
+		if (!sg_cnt) {
+			dev_err(mmc_dev(mmc), "DMA mapping failed\n");
+			req->data->error = -ENOMEM;
+			mmc_request_done(mmc, req);
+			return;
+		}
+
 		dma_address = priv->dma_desc_device_addr + 16;
 		desc_cnt = 0;
 

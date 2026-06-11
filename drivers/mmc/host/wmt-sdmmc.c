@@ -241,24 +241,19 @@ static void wmt_set_sd_power(struct wmt_mci_priv *priv, int enable)
 static void wmt_mci_read_response(struct mmc_host *mmc)
 {
 	struct wmt_mci_priv *priv;
-	int idx1, idx2;
-	u8 tmp_resp;
-	u32 response;
+	u32 w0, w1, w2, w3;
 
 	priv = mmc_priv(mmc);
 
-	for (idx1 = 0; idx1 < 4; idx1++) {
-		response = 0;
-		for (idx2 = 0; idx2 < 4; idx2++) {
-			if ((idx1 == 3) && (idx2 == 3))
-				tmp_resp = readb(priv->sdmmc_base + SDMMC_RSP);
-			else
-				tmp_resp = readb(priv->sdmmc_base + SDMMC_RSP +
-						 (idx1*4) + idx2 + 1);
-			response |= (tmp_resp << (idx2 * 8));
-		}
-		priv->cmd->resp[idx1] = cpu_to_be32(response);
-	}
+	w0 = readl(priv->sdmmc_base + SDMMC_RSP + 0x00);
+	w1 = readl(priv->sdmmc_base + SDMMC_RSP + 0x04);
+	w2 = readl(priv->sdmmc_base + SDMMC_RSP + 0x08);
+	w3 = readl(priv->sdmmc_base + SDMMC_RSP + 0x0C);
+
+	priv->cmd->resp[0] = cpu_to_be32((w0 >> 8) | (w1 << 24));
+	priv->cmd->resp[1] = cpu_to_be32((w1 >> 8) | (w2 << 24));
+	priv->cmd->resp[2] = cpu_to_be32((w2 >> 8) | (w3 << 24));
+	priv->cmd->resp[3] = cpu_to_be32((w3 >> 8) | ((w0 & 0xFF) << 24));
 }
 
 static void wmt_mci_start_command(struct wmt_mci_priv *priv)

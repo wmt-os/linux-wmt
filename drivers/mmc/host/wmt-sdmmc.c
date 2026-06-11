@@ -755,8 +755,8 @@ static const struct mmc_host_ops wmt_mci_ops = {
 
 /* Controller capabilities */
 static struct wmt_mci_caps wm8505_caps = {
-	.f_min = 390425,
-	.f_max = 50000000,
+	.f_min = 390000,
+	.f_max = 52000000,
 	.ocr_avail = MMC_VDD_32_33 | MMC_VDD_33_34,
 	.caps = MMC_CAP_4_BIT_DATA | MMC_CAP_MMC_HIGHSPEED |
 		MMC_CAP_SD_HIGHSPEED,

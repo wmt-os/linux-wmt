@@ -57,9 +57,22 @@
 
 
 /* SDMMC_CTLR bit fields */
+#define CTLR_CMD_TYPE_MASK		0xF0
 #define CTLR_CMD_START			0x01
 #define CTLR_CMD_WRITE			0x04
 #define CTLR_FIFO_RESET			0x08
+
+/* SDMMC_CTLR command types */
+#define CTLR_CMD_NORMAL			0x00
+#define CTLR_CMD_SINGLE_WRITE		0x01
+#define CTLR_CMD_SINGLE_READ		0x02
+#define CTLR_CMD_MULTI_WRITE		0x03
+#define CTLR_CMD_MULTI_READ		0x04
+#define CTLR_CMD_STOP			0x07
+
+/* SDMMC_RSPTYPE hardware types */
+#define RSPTYPE_R2			0x02
+#define RSPTYPE_R1B			0x09
 
 /* SDMMC_BUSMODE bit fields */
 #define BM_SPI_MODE			0x01
@@ -71,6 +84,7 @@
 #define BM_SOFT_RESET			0x80
 
 /* SDMMC_BLKLEN bit fields */
+#define BLKL_BLKSIZE_MASK		0x07FF
 #define BLKL_CRCERR_ABORT		0x0800
 #define BLKL_CD_POL_HIGH		0x1000
 #define BLKL_GPI_CD			0x2000
@@ -119,6 +133,9 @@
 /* SDMMC_EXTCTRL bit fields */
 #define EXT_EIGHTBIT			0x04
 
+/* SDMMC_DMATIMEOUT values */
+#define DMATIMEOUT_MAX			0x1FFF
+
 /* MMC/SD DMA Controller Registers */
 #define SDDMA_GCR			0x100
 #define SDDMA_IER			0x104
@@ -151,6 +168,7 @@
 #define DMA_CCR_PERIPHERAL_TO_IF	0x00400000
 
 /* SDDMA_CCR event status */
+#define DMA_CCR_EVT_MASK		0x0000000F
 #define DMA_CCR_EVT_NO_STATUS		0x00000000
 #define DMA_CCR_EVT_UNDERRUN		0x00000001
 #define DMA_CCR_EVT_OVERRUN		0x00000002
@@ -279,7 +297,7 @@ static int wmt_mci_send_command(struct mmc_host *mmc, u8 command, u8 cmdtype,
 
 	/* set command type */
 	reg_tmp = readb(priv->sdmmc_base + SDMMC_CTLR);
-	writeb((reg_tmp & 0x0F) | (cmdtype << 4),
+	writeb((reg_tmp & ~CTLR_CMD_TYPE_MASK) | (cmdtype << 4),
 	       priv->sdmmc_base + SDMMC_CTLR);
 
 	return 0;
@@ -324,7 +342,7 @@ static void wmt_complete_data_request(struct wmt_mci_priv *priv)
 			init_completion(priv->comp_cmd);
 			priv->cmd = req->data->stop;
 			wmt_mci_send_command(priv->mmc, req->data->stop->opcode,
-					     7, req->data->stop->arg, 9);
+					     CTLR_CMD_STOP, req->data->stop->arg, RSPTYPE_R1B);
 			wmt_mci_start_command(priv);
 		}
 	}
@@ -338,7 +356,7 @@ static irqreturn_t wmt_mci_dma_isr(int irq_num, void *data)
 
 	priv = (struct wmt_mci_priv *)data;
 
-	status = readl(priv->sdmmc_base + SDDMA_CCR) & 0x0F;
+	status = readl(priv->sdmmc_base + SDDMA_CCR) & DMA_CCR_EVT_MASK;
 
 	if (status != DMA_CCR_EVT_SUCCESS) {
 		dev_err(priv->dev, "DMA Error: Status = %d\n", status);
@@ -489,7 +507,7 @@ static void wmt_reset_hardware(struct mmc_host *mmc)
 	       INT1_CMD_RES_TOUT_INT_EN, priv->sdmmc_base + SDMMC_INTMASK1);
 
 	/* set the DMA timeout */
-	writew(8191, priv->sdmmc_base + SDMMC_DMATIMEOUT);
+	writew(DMATIMEOUT_MAX, priv->sdmmc_base + SDMMC_DMATIMEOUT);
 
 	/* auto clock freezing enable */
 	reg_tmp = readb(priv->sdmmc_base + SDMMC_STS2);
@@ -516,9 +534,9 @@ static int wmt_dma_init(struct mmc_host *mmc)
 static void wmt_dma_init_descriptor(struct wmt_dma_descriptor *desc,
 		u16 req_count, u32 buffer_addr, u32 branch_addr, int end)
 {
-	desc->flags = 0x40000000 | req_count;
+	desc->flags = DMA_RBR_FORMAT | req_count;
 	if (end)
-		desc->flags |= 0x80000000;
+		desc->flags |= DMA_RBR_END;
 	desc->data_buffer_addr = buffer_addr;
 	desc->branch_addr = branch_addr;
 }
@@ -587,14 +605,14 @@ static void wmt_mci_request(struct mmc_host *mmc, struct mmc_request *req)
 	command = req->cmd->opcode;
 	arg = req->cmd->arg;
 	rsptype = mmc_resp_type(req->cmd);
-	cmdtype = 0;
+	cmdtype = CTLR_CMD_NORMAL;
 
 	/* rsptype=7 only valid for SPI commands - should be =2 for SD */
 	if (rsptype == 7)
-		rsptype = 2;
+		rsptype = RSPTYPE_R2;
 	/* rsptype=21 is R1B, convert for controller */
 	if (rsptype == 21)
-		rsptype = 9;
+		rsptype = RSPTYPE_R1B;
 
 	if (!req->data) {
 		wmt_mci_send_command(mmc, command, cmdtype, arg, rsptype);
@@ -609,7 +627,7 @@ static void wmt_mci_request(struct mmc_host *mmc, struct mmc_request *req)
 
 		/* set controller data length */
 		reg_tmp = readw(priv->sdmmc_base + SDMMC_BLKLEN);
-		writew((reg_tmp & 0xF800) | (req->data->blksz - 1),
+		writew((reg_tmp & ~BLKL_BLKSIZE_MASK) | (req->data->blksz - 1),
 		       priv->sdmmc_base + SDMMC_BLKLEN);
 
 		/* set controller block count */
@@ -620,15 +638,15 @@ static void wmt_mci_request(struct mmc_host *mmc, struct mmc_request *req)
 		if (req->data->flags & MMC_DATA_WRITE) {
 			sg_cnt = dma_map_sg(mmc_dev(mmc), req->data->sg,
 					    req->data->sg_len, DMA_TO_DEVICE);
-			cmdtype = 1;
+			cmdtype = CTLR_CMD_SINGLE_WRITE;
 			if (req->data->blocks > 1)
-				cmdtype = 3;
+				cmdtype = CTLR_CMD_MULTI_WRITE;
 		} else {
 			sg_cnt = dma_map_sg(mmc_dev(mmc), req->data->sg,
 					    req->data->sg_len, DMA_FROM_DEVICE);
-			cmdtype = 2;
+			cmdtype = CTLR_CMD_SINGLE_READ;
 			if (req->data->blocks > 1)
-				cmdtype = 4;
+				cmdtype = CTLR_CMD_MULTI_READ;
 		}
 
 		if (!sg_cnt) {
@@ -656,7 +674,7 @@ static void wmt_mci_request(struct mmc_host *mmc, struct mmc_request *req)
 			}
 		}
 		desc--;
-		desc->flags |= 0x80000000;
+		desc->flags |= DMA_RBR_END;
 
 		if (req->data->flags & MMC_DATA_WRITE)
 			wmt_dma_config(mmc, priv->dma_desc_device_addr,
@@ -901,7 +919,7 @@ static void wmt_mci_remove(struct platform_device *pdev)
 	reg_tmp = readb(priv->sdmmc_base + SDMMC_BUSMODE);
 	writeb(reg_tmp | BM_SOFT_RESET, priv->sdmmc_base + SDMMC_BUSMODE);
 	reg_tmp = readw(priv->sdmmc_base + SDMMC_BLKLEN);
-	writew(reg_tmp & ~(0xA000), priv->sdmmc_base + SDMMC_BLKLEN);
+	writew(reg_tmp & ~(BLKL_INT_ENABLE | BLKL_GPI_CD), priv->sdmmc_base + SDMMC_BLKLEN);
 	writeb(0xFF, priv->sdmmc_base + SDMMC_STS0);
 	writeb(0xFF, priv->sdmmc_base + SDMMC_STS1);
 
@@ -940,7 +958,7 @@ static int wmt_mci_suspend(struct device *dev)
 	       SDMMC_BUSMODE);
 
 	reg_tmp = readw(priv->sdmmc_base + SDMMC_BLKLEN);
-	writew(reg_tmp & 0x5FFF, priv->sdmmc_base + SDMMC_BLKLEN);
+	writew(reg_tmp & ~(BLKL_INT_ENABLE | BLKL_GPI_CD), priv->sdmmc_base + SDMMC_BLKLEN);
 
 	writeb(0xFF, priv->sdmmc_base + SDMMC_STS0);
 	writeb(0xFF, priv->sdmmc_base + SDMMC_STS1);

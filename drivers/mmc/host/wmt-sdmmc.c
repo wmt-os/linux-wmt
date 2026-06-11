@@ -22,6 +22,8 @@
 #include <linux/of.h>
 #include <linux/of_address.h>
 #include <linux/of_irq.h>
+#include <linux/math.h>
+#include <linux/minmax.h>
 
 #include <linux/mmc/host.h>
 #include <linux/mmc/mmc.h>
@@ -582,7 +584,8 @@ static void wmt_mci_request(struct mmc_host *mmc, struct mmc_request *req)
 	int sg_cnt;
 	int offset;
 	u32 dma_address;
-	int desc_cnt;
+	u32 max_seg;
+	u32 len;
 
 	priv = mmc_priv(mmc);
 	priv->req = req;
@@ -648,21 +651,20 @@ static void wmt_mci_request(struct mmc_host *mmc, struct mmc_request *req)
 			return;
 		}
 
-		dma_address = priv->dma_desc_device_addr + 16;
-		desc_cnt = 0;
+		dma_address = priv->dma_desc_device_addr + sizeof(struct wmt_dma_descriptor);
+		max_seg = rounddown(priv->mmc->max_seg_size, req->data->blksz);
 
 		for_each_sg(req->data->sg, sg, sg_cnt, i) {
 			offset = 0;
 			while (offset < sg_dma_len(sg)) {
-				wmt_dma_init_descriptor(desc, req->data->blksz,
-						sg_dma_address(sg)+offset,
-						dma_address, 0);
+				len = min(sg_dma_len(sg) - offset, max_seg);
+
+				wmt_dma_init_descriptor(desc, len,
+							sg_dma_address(sg) + offset,
+							dma_address, 0);
 				desc++;
-				desc_cnt++;
-				offset += req->data->blksz;
-				dma_address += 16;
-				if (desc_cnt == req->data->blocks)
-					break;
+				offset += len;
+				dma_address += sizeof(struct wmt_dma_descriptor);
 			}
 		}
 		desc--;
@@ -754,7 +756,7 @@ static struct wmt_mci_caps wm8505_caps = {
 	.ocr_avail = MMC_VDD_32_33 | MMC_VDD_33_34,
 	.caps = MMC_CAP_4_BIT_DATA | MMC_CAP_MMC_HIGHSPEED |
 		MMC_CAP_SD_HIGHSPEED,
-	.max_seg_size = 65024,
+	.max_seg_size = 65535,
 	.max_segs = 128,
 	.max_blk_size = 2048,
 };
@@ -808,7 +810,7 @@ static int wmt_mci_probe(struct platform_device *pdev)
 	mmc->max_segs = wmt_caps->max_segs;
 	mmc->max_blk_size = wmt_caps->max_blk_size;
 
-	mmc->max_req_size = (16*512*mmc->max_segs);
+	mmc->max_req_size = rounddown(mmc->max_seg_size, 512) * mmc->max_segs;
 	mmc->max_blk_count = mmc->max_req_size / 512;
 
 	priv = mmc_priv(mmc);
@@ -849,7 +851,8 @@ static int wmt_mci_probe(struct platform_device *pdev)
 
 	/* alloc some DMA buffers for descriptors/transfers */
 	priv->dma_desc_buffer = dmam_alloc_coherent(&pdev->dev,
-						    mmc->max_blk_count * 16,
+						    (mmc->max_segs * 2) *
+						    sizeof(struct wmt_dma_descriptor),
 						    &priv->dma_desc_device_addr,
 						    GFP_KERNEL);
 	if (!priv->dma_desc_buffer) {

@@ -92,6 +92,7 @@
 			#interrupt-cells = <2>;
 			gpio-controller;
 			#gpio-cells = <2>;
+			gpio-ranges = <&pinctrl 0 0 352>;
 			clocks = <&pmc WM8505_CLK_GPIO>;
 		};
 

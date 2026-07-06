@@ -533,11 +533,20 @@ static int wmt_gpio_direction_output(struct gpio_chip *chip, unsigned offset,
 	return pinctrl_gpio_direction_output(chip, offset);
 }
 
+static int wmt_gpio_add_pin_ranges(struct gpio_chip *chip)
+{
+	struct wmt_pinctrl_data *data = gpiochip_get_data(chip);
+
+	return gpiochip_add_pin_range(chip, dev_name(data->dev), 0, 0,
+				     data->nbanks * 32);
+}
+
 static const struct gpio_chip wmt_gpio_chip = {
 	.label = "gpio-wmt",
 	.owner = THIS_MODULE,
 	.request = gpiochip_generic_request,
 	.free = gpiochip_generic_free,
+	.add_pin_ranges = wmt_gpio_add_pin_ranges,
 	.get_direction = wmt_gpio_get_direction,
 	.direction_input = pinctrl_gpio_direction_input,
 	.direction_output = wmt_gpio_direction_output,
@@ -578,16 +587,7 @@ int wmt_pinctrl_probe(struct platform_device *pdev,
 		return err;
 	}
 
-	err = gpiochip_add_pin_range(&data->gpio_chip, dev_name(data->dev),
-				     0, 0, data->nbanks * 32);
-	if (err)
-		goto fail_range;
-
 	dev_info(&pdev->dev, "Pin controller initialized\n");
 
 	return 0;
-
-fail_range:
-	gpiochip_remove(&data->gpio_chip);
-	return err;
 }

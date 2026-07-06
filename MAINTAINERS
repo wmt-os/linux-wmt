@@ -25038,6 +25038,7 @@ M:	Logan Russell <me@lrussell.net>
 S:	Maintained
 F:	drivers/irqchip/irq-vt8500.c
 F:	drivers/mmc/host/wmt-sdmmc.c
+F:	drivers/pinctrl/vt8500/pinctrl-wmt.c
 
 WORKQUEUE
 M:	Tejun Heo <tj@kernel.org>

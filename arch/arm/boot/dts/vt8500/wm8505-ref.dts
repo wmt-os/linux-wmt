@@ -7,6 +7,8 @@
  */
 
 /dts-v1/;
+
+#include <dt-bindings/gpio/gpio.h>
 #include "wm8505.dtsi"
 
 / {
@@ -29,6 +31,15 @@
 			vfront-porch = <11>;
 			vsync-len = <1>;
 		};
+	};
+};
+
+&pinctrl {
+	wifi-power-hog {
+		gpio-hog;
+		gpios = <2 GPIO_ACTIVE_HIGH>;
+		output-high;
+		line-name = "wifi-power";
 	};
 };
 

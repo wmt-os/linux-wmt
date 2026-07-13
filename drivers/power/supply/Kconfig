@@ -999,6 +999,17 @@ config BATTERY_UG3105
 	  device is off or suspended, the functionality of this driver is
 	  limited to reporting capacity only.
 
+config BATTERY_WM8505
+	tristate "WonderMedia WM8505 battery"
+	depends on ARCH_VT8500 || COMPILE_TEST
+	depends on GPIOLIB
+	help
+	  Say Y here to enable support for the battery on WonderMedia WM8505
+	  netbooks. It reports charge level, status and a low-battery alarm.
+
+	  To compile this driver as a module, choose M here: the module will
+	  be called wm8505-battery.
+
 config CHARGER_QCOM_SMB2
 	tristate "Qualcomm PMI8998 PMIC charger driver"
 	depends on MFD_SPMI_PMIC

@@ -25053,6 +25053,7 @@ F:	drivers/irqchip/irq-vt8500.c
 F:	drivers/mmc/host/wmt-sdmmc.c
 F:	drivers/mtd/devices/wmt_sflash.c
 F:	drivers/pinctrl/vt8500/pinctrl-wmt.c
+F:	drivers/power/supply/wm8505-battery.c
 F:	include/dt-bindings/clock/wm8505-clock.h
 F:	include/uapi/drm/wmt_drm.h
 F:	sound/soc/wmt/

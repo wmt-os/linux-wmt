@@ -3,6 +3,7 @@ wmt-drm-y := \
 	wmt_drm_drv.o \
 	wmt_drm_crtc.o \
 	wmt_drm_vdma.o \
-	wmt_drm_ge.o
+	wmt_drm_ge.o \
+	wmt_drm_fb.o
 
 obj-$(CONFIG_DRM_WMT) += wmt-drm.o

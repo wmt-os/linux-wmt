@@ -37,6 +37,8 @@
 struct drm_gem_object;
 struct clk;
 struct drm_pending_vblank_event;
+struct drm_gem_dma_object;
+struct drm_fb_helper;
 
 /* Queued GE Job */
 struct wmt_ge_job {
@@ -104,6 +106,7 @@ struct wmt_drm_device {
 	u32 ge_seq;
 	u32 ge_done;
 	bool ge_reset_pending;
+	bool ge_console;
 	bool ge_dead;
 	wait_queue_head_t ge_wait;
 	struct work_struct ge_retire_work;
@@ -132,7 +135,13 @@ void wmt_ge_retire_work(struct work_struct *work);
 void wmt_ge_reset_work(struct work_struct *work);
 void wmt_ge_teardown(void *data);
 void wmt_ge_latch_drain(struct wmt_drm_device *wmt, struct drm_gem_object *gem);
+int wmt_ge_console_op(struct wmt_drm_device *wmt, struct drm_wmt_ge_op *op,
+		      struct drm_gem_dma_object *gem);
+void wmt_ge_console_idle(struct wmt_drm_device *wmt);
 int wmt_drm_ioctl_ge_submit(struct drm_device *dev, void *data, struct drm_file *file_priv);
 int wmt_drm_ioctl_ge_wait(struct drm_device *dev, void *data, struct drm_file *file_priv);
+
+/* FBCon GE Acceleration */
+void wmt_fbdev_probe_hook(struct drm_fb_helper *fb_helper);
 
 #endif /* _WMT_DRM_H_ */

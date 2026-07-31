@@ -198,7 +198,7 @@ irqreturn_t wmt_ge_irq(int irq, void *data)
 
 	spin_lock(&wmt->ge_lock);
 	/* Skip ring if busy or reset pending */
-	if (!wmt->ge_reset_pending) {
+	if (!wmt->ge_console && !wmt->ge_reset_pending) {
 		if (flag & WMT_GE_INT_TIMEOUT) {
 			wmt->ge_reset_pending = true;
 			reset = true;
@@ -314,6 +314,61 @@ void wmt_ge_latch_drain(struct wmt_drm_device *wmt, struct drm_gem_object *gem)
 
 	if (target && !wmt_ge_spin(wmt, target))
 		wait_event(wmt->ge_wait, wmt_ge_passed(READ_ONCE(wmt->ge_done), target));
+}
+
+int wmt_ge_console_op(struct wmt_drm_device *wmt, struct drm_wmt_ge_op *op,
+		      struct drm_gem_dma_object *gem)
+{
+	void __iomem *regs = wmt->ge_regs;
+	unsigned long flags;
+	u32 status;
+	int ret;
+
+	if (!wmt_ge_validate_op(op, gem->base.size, gem->base.size))
+		return -EINVAL;
+
+	spin_lock_irqsave(&wmt->ge_lock, flags);
+	if (wmt->ge_dead || wmt->ge_tail != wmt->ge_head || wmt->ge_console) {
+		spin_unlock_irqrestore(&wmt->ge_lock, flags);
+		return -EBUSY;
+	}
+	wmt->ge_console = true;
+	if (op->type == WMT_GE_OP_BLIT)
+		wmt_ge_blit(regs, gem->dma_addr, gem->dma_addr, op);
+	else
+		wmt_ge_fill(regs, gem->dma_addr, op);
+	spin_unlock_irqrestore(&wmt->ge_lock, flags);
+
+	/* Poll for completion */
+	ret = readl_poll_timeout_atomic(regs + WMT_GE_STATUS, status,
+					!(status & WMT_GE_STATUS_BUSY), 1, WMT_GE_TIMEOUT_US);
+	if (ret)
+		wmt_ge_reset(wmt);
+
+	spin_lock_irqsave(&wmt->ge_lock, flags);
+	writel(WMT_GE_INT_CLEAR, regs + WMT_GE_INT_FLAG);
+	wmt->ge_console = false;
+	if (wmt->ge_tail != wmt->ge_head)
+		wmt_ge_kick(wmt);
+	spin_unlock_irqrestore(&wmt->ge_lock, flags);
+
+	return ret;
+}
+
+void wmt_ge_console_idle(struct wmt_drm_device *wmt)
+{
+	unsigned long flags;
+	u32 status;
+	bool idle;
+
+	spin_lock_irqsave(&wmt->ge_lock, flags);
+	idle = wmt->ge_tail == wmt->ge_head && !wmt->ge_console;
+	spin_unlock_irqrestore(&wmt->ge_lock, flags);
+
+	/* Verify engine is idle */
+	if (idle)
+		readl_poll_timeout_atomic(wmt->ge_regs + WMT_GE_STATUS, status,
+					  !(status & WMT_GE_STATUS_BUSY), 1, WMT_GE_RESET_US);
 }
 
 void wmt_ge_teardown(void *data)
@@ -443,7 +498,7 @@ int wmt_drm_ioctl_ge_submit(struct drm_device *dev, void *data, struct drm_file 
 	req->out_seqno = job->seqno;
 
 	/* Kick engine if idle */
-	start = wmt->ge_head == wmt->ge_tail;
+	start = wmt->ge_head == wmt->ge_tail && !wmt->ge_console;
 	wmt->ge_head++;
 	if (start)
 		wmt_ge_kick(wmt);

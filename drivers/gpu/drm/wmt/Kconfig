@@ -6,8 +6,9 @@ config DRM_WMT
 	select DRM_GEM_DMA_HELPER
 	select DRM_PANEL
 	select DRM_PANEL_BRIDGE
+	select VIDEOMODE_HELPERS
 	help
 	  Choose this option for DRM support for the WonderMedia WM8505 SoC.
 	  This enables display output for the integrated LCD panel.
-	  If M is selected, the module will be called wmt-drm.
+	  If M is selected, the modules will be called wmt-drm and wmt_panel.
 	  If unsure, say N.

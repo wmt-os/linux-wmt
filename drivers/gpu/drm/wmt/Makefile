@@ -6,4 +6,5 @@ wmt-drm-y := \
 	wmt_drm_ge.o \
 	wmt_drm_fb.o
 
+obj-$(CONFIG_DRM_WMT) += wmt_panel.o
 obj-$(CONFIG_DRM_WMT) += wmt-drm.o

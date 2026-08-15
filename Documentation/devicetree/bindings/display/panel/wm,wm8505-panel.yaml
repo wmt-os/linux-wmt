@@ -1,0 +1,70 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/display/panel/wm,wm8505-panel.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: WonderMedia WM8505 Netbook Panel
+
+maintainers:
+  - Logan Russell <me@lrussell.net>
+
+description:
+  The DPI panel fitted to a WM8505 netbook varies by model. The panel-timing
+  node carries the reference design timings; the bootloader may supply the
+  fitted panel's own.
+
+select:
+  properties:
+    compatible:
+      contains:
+        const: wm,wm8505-panel
+  required:
+    - compatible
+
+allOf:
+  - $ref: panel-common.yaml#
+
+properties:
+  compatible:
+    items:
+      - const: wm,wm8505-panel
+      - const: panel-dpi
+
+required:
+  - compatible
+  - width-mm
+  - height-mm
+  - panel-timing
+  - power-supply
+  - port
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    panel {
+        compatible = "wm,wm8505-panel", "panel-dpi";
+        power-supply = <&vcc33>;
+        backlight = <&backlight>;
+        width-mm = <154>;
+        height-mm = <86>;
+
+        port {
+            panel_in: endpoint {
+                remote-endpoint = <&display_out>;
+            };
+        };
+
+        panel-timing {
+            clock-frequency = <30000000>;
+            hactive = <800>;
+            vactive = <480>;
+            hsync-len = <48>;
+            hback-porch = <40>;
+            hfront-porch = <40>;
+            vsync-len = <3>;
+            vback-porch = <29>;
+            vfront-porch = <13>;
+        };
+    };

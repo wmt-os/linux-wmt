@@ -55,7 +55,7 @@
 	};
 
 	panel {
-		compatible = "panel-dpi";
+		compatible = "wm,wm8505-panel", "panel-dpi";
 		power-supply = <&vcc33>;
 		backlight = <&backlight>;
 		width-mm = <154>;

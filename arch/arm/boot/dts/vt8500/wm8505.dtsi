@@ -156,6 +156,7 @@
 			interrupts = <20>, <21>;
 			clocks = <&pmc WM8505_CLK_SDHC>;
 			bus-width = <4>;
+			disable-wp;
 		};
 
 		graphics: graphics@d8050400 {

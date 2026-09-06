@@ -821,6 +821,10 @@ static int wmt_mci_probe(struct platform_device *pdev)
 	priv->power_inverted = of_property_read_bool(np, "sdon-inverted");
 	priv->cd_inverted = of_property_read_bool(np, "cd-inverted");
 
+	ret = mmc_of_parse(mmc);
+	if (ret)
+		return ret;
+
 	priv->sdmmc_base = devm_platform_ioremap_resource(pdev, 0);
 	if (IS_ERR(priv->sdmmc_base))
 		return PTR_ERR(priv->sdmmc_base);

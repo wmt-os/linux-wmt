@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/media/wm,wm8505-scl.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: WonderMedia WM8505 Scaler
+
+maintainers:
+  - Logan Russell <me@lrussell.net>
+
+description:
+  Memory-to-memory picture scaler and color space converter. Its interrupt
+  and reset lines live in the shared Video Post Processor (VPP) register
+  block, so the interrupt line is shared with the display controller.
+
+properties:
+  compatible:
+    const: wm,wm8505-scl
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+    description: Shared VPP interrupt
+
+  clocks:
+    maxItems: 1
+
+  wm,vpp:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: Phandle to the VPP syscon node
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - clocks
+  - wm,vpp
+
+additionalProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/clock/wm8505-clock.h>
+
+    scaler@d8050d00 {
+        compatible = "wm,wm8505-scl";
+        reg = <0xd8050d00 0x100>;
+        interrupt-parent = <&intc1>;
+        interrupts = <16>;
+        clocks = <&pmc WM8505_CLK_SCL444U>;
+        wm,vpp = <&vpp>;
+    };

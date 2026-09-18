@@ -25043,6 +25043,7 @@ F:	Documentation/devicetree/bindings/display/wm,wm8505-drm.yaml
 F:	Documentation/devicetree/bindings/dma/wm,wm8505-dma.yaml
 F:	Documentation/devicetree/bindings/input/wm,wm8505-ps2.yaml
 F:	Documentation/devicetree/bindings/media/wm,wm8505-jdec.yaml
+F:	Documentation/devicetree/bindings/media/wm,wm8505-scl.yaml
 F:	Documentation/devicetree/bindings/mtd/wm,wm8505-sf.yaml
 F:	Documentation/devicetree/bindings/power/supply/wm,wm8505-battery.yaml
 F:	Documentation/devicetree/bindings/sound/wm,wm8505-ac97.yaml

@@ -186,6 +186,14 @@
 			};
 		};
 
+		jpeg-decoder@d80fe000 {
+			compatible = "wm,wm8505-jdec";
+			reg = <0xd80fe000 0x1000>;
+			interrupt-parent = <&intc1>;
+			interrupts = <1>;
+			clocks = <&pmc WM8505_CLK_JENC>;
+		};
+
 		rtc@d8100000 {
 			compatible = "via,vt8500-rtc";
 			reg = <0xd8100000 0x10000>;

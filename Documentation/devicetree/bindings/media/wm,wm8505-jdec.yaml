@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/media/wm,wm8505-jdec.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: WonderMedia WM8505 JPEG Decoder
+
+maintainers:
+  - Logan Russell <me@lrussell.net>
+
+description: |
+  The WM8505 JPEG decoder is a hardware block that provides baseline JPEG
+  and Motion JPEG decoding through the V4L2 memory-to-memory interface.
+
+properties:
+  compatible:
+    const: wm,wm8505-jdec
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  clocks:
+    maxItems: 1
+    description: AHB bus clock
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - clocks
+
+additionalProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/clock/wm8505-clock.h>
+
+    jpeg-decoder@d80fe000 {
+        compatible = "wm,wm8505-jdec";
+        reg = <0xd80fe000 0x1000>;
+        interrupt-parent = <&intc1>;
+        interrupts = <1>;
+        clocks = <&pmc WM8505_CLK_JENC>;
+    };

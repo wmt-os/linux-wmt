@@ -18,3 +18,21 @@ config VIDEO_WMT_JDEC
 	  Say M here if you want to enable support for the WM8505 JPEG decoder.
 
 	  The module will be called wmt-jdec.
+
+config VIDEO_WMT_SCL
+	tristate "WonderMedia WM8505 scaler"
+	depends on V4L_MEM2MEM_DRIVERS
+	depends on VIDEO_DEV
+	depends on ARCH_VT8500 || COMPILE_TEST
+	select VIDEOBUF2_DMA_CONTIG
+	select V4L2_MEM2MEM_DEV
+	select MFD_SYSCON
+	help
+	  This is a V4L2 memory-to-memory driver for the WonderMedia WM8505
+	  picture scaler and color space converter. It supports bilinear
+	  upscaling, box-filter downscaling, and format conversion between
+	  NV12 and ARGB8888.
+
+	  Say M here if you want to enable support for the WM8505 scaler.
+
+	  The module will be called wmt-scl.

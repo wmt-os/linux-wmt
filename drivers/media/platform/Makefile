@@ -31,6 +31,7 @@ obj-y += sunxi/
 obj-y += ti/
 obj-y += verisilicon/
 obj-y += via/
+obj-y += wmt/
 obj-y += xilinx/
 
 # Please place here only ancillary drivers that aren't SoC-specific

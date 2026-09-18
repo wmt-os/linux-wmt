@@ -25051,6 +25051,7 @@ F:	drivers/dma/wmt-dma.c
 F:	drivers/gpu/drm/wmt/
 F:	drivers/input/serio/wm8505-ps2.c
 F:	drivers/irqchip/irq-vt8500.c
+F:	drivers/media/platform/wmt/
 F:	drivers/mmc/host/wmt-sdmmc.c
 F:	drivers/mtd/devices/wmt_sflash.c
 F:	drivers/pinctrl/vt8500/pinctrl-wmt.c

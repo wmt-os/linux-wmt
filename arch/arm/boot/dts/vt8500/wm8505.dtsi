@@ -186,6 +186,15 @@
 			};
 		};
 
+		scaler: scaler@d8050d00 {
+			compatible = "wm,wm8505-scl";
+			reg = <0xd8050d00 0x100>;
+			interrupt-parent = <&intc1>;
+			interrupts = <16>;
+			clocks = <&pmc WM8505_CLK_SCL444U>;
+			wm,vpp = <&vpp>;
+		};
+
 		vpp: syscon@d8050f00 {
 			compatible = "wm,wm8505-vpp", "syscon";
 			reg = <0xd8050f00 0x100>;

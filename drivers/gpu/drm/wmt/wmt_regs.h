@@ -66,6 +66,7 @@
 /* VPP Shared Interrupt */
 #define WMT_VPP_INTSTS			0x4
 #define WMT_VPP_INTEN			0x8
+#define WMT_VPP_GOVRH_PVBI		BIT(8)
 #define WMT_VPP_GOVRH_VBIS		BIT(9)
 
 /* VPP Module Reset */

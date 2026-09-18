@@ -46,12 +46,11 @@ void wmt_ge_configure(struct wmt_drm_device *wmt)
 static void wmt_ge_reset(struct wmt_drm_device *wmt)
 {
 	void __iomem *reg = wmt->ge_regs + WMT_GE_STATUS;
-	u32 val, status;
+	u32 status;
 
 	writel(0, wmt->ge_regs + WMT_GE_INT_EN);
-	val = readl(wmt->vpp_regs + WMT_VPP_SW_RESET);
-	writel(val & ~WMT_VPP_SW_RESET_GE, wmt->vpp_regs + WMT_VPP_SW_RESET);
-	writel(val | WMT_VPP_SW_RESET_GE, wmt->vpp_regs + WMT_VPP_SW_RESET);
+	regmap_update_bits(wmt->vpp, WMT_VPP_SW_RESET, WMT_VPP_SW_RESET_GE, 0);
+	regmap_update_bits(wmt->vpp, WMT_VPP_SW_RESET, WMT_VPP_SW_RESET_GE, WMT_VPP_SW_RESET_GE);
 	writel(WMT_GE_ENABLE, wmt->ge_regs + WMT_GE_ENG_EN);
 	readl_poll_timeout_atomic(reg, status, !(status & WMT_GE_STATUS_RESET),
 				  1, WMT_GE_RESET_US);

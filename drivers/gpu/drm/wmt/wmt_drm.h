@@ -10,6 +10,7 @@
 
 #include <linux/container_of.h>
 #include <linux/irqreturn.h>
+#include <linux/regmap.h>
 #include <linux/spinlock.h>
 #include <linux/types.h>
 #include <linux/wait.h>
@@ -84,7 +85,7 @@ struct wmt_drm_device {
 	struct drm_simple_display_pipe pipe;
 
 	void __iomem *govrh_regs;
-	void __iomem *vpp_regs;
+	struct regmap *vpp;
 	void __iomem *vdma_regs;
 	void __iomem *ge_regs;
 	int vdma_irq;
@@ -113,7 +114,6 @@ struct wmt_drm_device {
 
 	/* GOVRH page-flip */
 	struct drm_pending_vblank_event *pending_event;
-	bool defer_vblank;
 };
 
 #define to_wmt_drm(x) container_of(x, struct wmt_drm_device, drm)

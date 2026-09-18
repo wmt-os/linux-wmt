@@ -74,6 +74,8 @@ static void wmt_govrh_set_timing(struct wmt_drm_device *wmt,
 	       wmt->govrh_regs + WMT_GOVRH_VBISW);
 	writel(min_t(int, v_sync + 1, FIELD_MAX(WMT_GOVRH_VBIE_LINE_MASK)),
 	       wmt->govrh_regs + WMT_GOVRH_VBIE_LINE);
+
+	/* Pre-vblank interrupt fires in the front porch before vsync */
 	writel(clamp_t(int, v_fp - 2, 1, FIELD_MAX(WMT_GOVRH_PVBI_LINE_MASK)),
 	       wmt->govrh_regs + WMT_GOVRH_PVBI_LINE);
 }
@@ -84,28 +86,24 @@ static void wmt_govrh_set_timing(struct wmt_drm_device *wmt,
 irqreturn_t wmt_vblank_irq(int irq, void *data)
 {
 	struct wmt_drm_device *wmt = data;
-	u32 status = readl(wmt->vpp_regs + WMT_VPP_INTSTS);
 	unsigned long flags;
+	u32 status;
 
-	if (!(status & WMT_VPP_GOVRH_VBIS))
+	regmap_read(wmt->vpp, WMT_VPP_INTSTS, &status);
+	if (!(status & WMT_VPP_GOVRH_PVBI))
 		return IRQ_NONE;
 
-	/* Clear interrupt */
-	writel(WMT_VPP_GOVRH_VBIS, wmt->vpp_regs + WMT_VPP_INTSTS);
+	regmap_write(wmt->vpp, WMT_VPP_INTSTS, WMT_VPP_GOVRH_PVBI);
 
 	drm_crtc_handle_vblank(&wmt->pipe.crtc);
 
 	spin_lock_irqsave(&wmt->drm.event_lock, flags);
 
 	if (wmt->pending_event) {
-		if (wmt->defer_vblank) {
-			/* Shadow register latch cycle missed, defer delivery to next interrupt */
-			wmt->defer_vblank = false;
-		} else {
-			drm_crtc_send_vblank_event(&wmt->pipe.crtc, wmt->pending_event);
-			drm_crtc_vblank_put(&wmt->pipe.crtc);
-			wmt->pending_event = NULL;
-		}
+		drm_crtc_send_vblank_event(&wmt->pipe.crtc,
+					   wmt->pending_event);
+		drm_crtc_vblank_put(&wmt->pipe.crtc);
+		wmt->pending_event = NULL;
 	}
 
 	spin_unlock_irqrestore(&wmt->drm.event_lock, flags);
@@ -216,14 +214,11 @@ static void wmt_pipe_disable(struct drm_simple_display_pipe *pipe)
 static int wmt_pipe_enable_vblank(struct drm_simple_display_pipe *pipe)
 {
 	struct wmt_drm_device *wmt = to_wmt_drm(pipe->crtc.dev);
-	u32 inten;
 
-	/* Clear stale interrupts */
-	writel(WMT_VPP_GOVRH_VBIS, wmt->vpp_regs + WMT_VPP_INTSTS);
-
-	inten = readl(wmt->vpp_regs + WMT_VPP_INTEN);
-	inten |= WMT_VPP_GOVRH_VBIS;
-	writel(inten, wmt->vpp_regs + WMT_VPP_INTEN);
+	regmap_write(wmt->vpp, WMT_VPP_INTSTS, WMT_VPP_GOVRH_PVBI);
+	regmap_update_bits(wmt->vpp, WMT_VPP_INTEN,
+			   WMT_VPP_GOVRH_PVBI | WMT_VPP_GOVRH_VBIS,
+			   WMT_VPP_GOVRH_PVBI);
 
 	return 0;
 }
@@ -234,10 +229,9 @@ static int wmt_pipe_enable_vblank(struct drm_simple_display_pipe *pipe)
 static void wmt_pipe_disable_vblank(struct drm_simple_display_pipe *pipe)
 {
 	struct wmt_drm_device *wmt = to_wmt_drm(pipe->crtc.dev);
-	u32 inten = readl(wmt->vpp_regs + WMT_VPP_INTEN);
 
-	inten &= ~WMT_VPP_GOVRH_VBIS;
-	writel(inten, wmt->vpp_regs + WMT_VPP_INTEN);
+	regmap_update_bits(wmt->vpp, WMT_VPP_INTEN,
+			   WMT_VPP_GOVRH_PVBI | WMT_VPP_GOVRH_VBIS, 0);
 }
 
 /*
@@ -266,18 +260,12 @@ static void wmt_pipe_update(struct drm_simple_display_pipe *pipe,
 	}
 
 	if (crtc->state->event) {
-		u32 status = readl(wmt->vpp_regs + WMT_VPP_INTSTS);
-
 		wmt->pending_event = crtc->state->event;
 		crtc->state->event = NULL;
-
-		/* Guard against hardware latch misses if actively in the VBI */
-		wmt->defer_vblank = status & WMT_VPP_GOVRH_VBIS;
 
 		if (drm_crtc_vblank_get(crtc) != 0) {
 			drm_crtc_send_vblank_event(crtc, wmt->pending_event);
 			wmt->pending_event = NULL;
-			wmt->defer_vblank = false;
 		}
 	}
 	spin_unlock_irqrestore(&crtc->dev->event_lock, flags);

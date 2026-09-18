@@ -14,10 +14,12 @@
 #include <linux/io.h>
 #include <linux/limits.h>
 #include <linux/math.h>
+#include <linux/mfd/syscon.h>
 #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/of_irq.h>
 #include <linux/platform_device.h>
+#include <linux/regmap.h>
 
 #include <drm/drm_atomic_helper.h>
 #include <drm/drm_bridge.h>
@@ -102,10 +104,10 @@ static int wmt_drm_probe(struct platform_device *pdev)
 	if (IS_ERR(wmt->govrh_regs))
 		return PTR_ERR(wmt->govrh_regs);
 
-	/* Map interrupt controller (VPP) registers */
-	wmt->vpp_regs = devm_platform_ioremap_resource_byname(pdev, "vpp");
-	if (IS_ERR(wmt->vpp_regs))
-		return PTR_ERR(wmt->vpp_regs);
+	/* Shared VPP registers */
+	wmt->vpp = syscon_regmap_lookup_by_phandle(dev->of_node, "wm,vpp");
+	if (IS_ERR(wmt->vpp))
+		return dev_err_probe(dev, PTR_ERR(wmt->vpp), "Failed to get the VPP syscon\n");
 
 	/* Map video DMA (VDMA) registers */
 	wmt->vdma_regs = devm_platform_ioremap_resource_byname(pdev, "vdma");
@@ -144,11 +146,12 @@ static int wmt_drm_probe(struct platform_device *pdev)
 		return ret;
 
 	/* Set up hardware interrupts */
-	writel(0, wmt->vpp_regs + WMT_VPP_INTEN);
+	regmap_update_bits(wmt->vpp, WMT_VPP_INTEN,
+			   WMT_VPP_GOVRH_PVBI | WMT_VPP_GOVRH_VBIS, 0);
 	vpp_irq = platform_get_irq_byname(pdev, "vpp");
 	if (vpp_irq < 0)
 		return vpp_irq;
-	ret = devm_request_irq(dev, vpp_irq, wmt_vblank_irq, 0, "wmt-drm", wmt);
+	ret = devm_request_irq(dev, vpp_irq, wmt_vblank_irq, IRQF_SHARED, "wmt-drm", wmt);
 	if (ret)
 		return ret;
 

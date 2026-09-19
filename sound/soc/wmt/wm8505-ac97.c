@@ -348,7 +348,8 @@ static int wm8505_dma_prepare_slave_config(struct snd_pcm_substream *substream,
 static const struct snd_pcm_hardware wm8505_pcm_hardware = {
 	.info			= SNDRV_PCM_INFO_MMAP |
 				  SNDRV_PCM_INFO_MMAP_VALID |
-				  SNDRV_PCM_INFO_INTERLEAVED,
+				  SNDRV_PCM_INFO_INTERLEAVED |
+				  SNDRV_PCM_INFO_PAUSE,
 	.period_bytes_min	= 64,
 	.period_bytes_max	= 32768,
 	.periods_min		= 2,
